@@ -1,51 +1,72 @@
 import React from 'react';
-import { shallow } from 'enzyme';
-import App from './App';
+import './App.css';
+import Header from '../Header/Header';
+import Footer from '../Footer/Footer';
+import Notification from '../Notifications/Notifications';
+import Login from '../Login/Login';
+import CourseList from '../CourseList/CourseList';
+import { getLatestNotification } from '../utils/utils';
+import PropTypes from 'prop-types';
 
-describe('Test App.js', () => {
-  let wrapper;
 
-  beforeEach(() => {
-    wrapper = shallow(<App />);
-  });
+class App extends React.Component {
+  static listCourses = [
+    {id: 1, name: 'ES6', credit: 60},
+    {id: 2, name: 'Webpack', credit: 20},
+    {id: 3, name: 'React', credit: 40}
+  ];
 
-  it('Renders App without crashing', () => {
-    expect(wrapper.exists());
-  });
+  static listNotifications = [
+    {id: 1, value: "New course available", type: "default"},
+    {id: 2, value: "New resume available", type: "urgent"},
+    {id: 3, html: {__html: getLatestNotification()}, type: "urgent"},
+  ];
 
-  it('App component contains Notifications component', () => {
-    expect(wrapper.find("Notifications")).toHaveLength(1);
-  });
+  constructor(props) {
+    super(props);
+    this.isLoggedIn = props.isLoggedIn;
+    this.logOut = props.logOut;
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+  }
 
-  it('App component contains Header component', () => {
-    expect(wrapper.find("Header")).toHaveLength(1);
-  });
+  handleKeyDown(e) {
+    e.preventDefault();
+    if (e.ctrlKey && e.key === 'h') {
+        alert("Logging you out");
+        this.logOut();
+    }
+  }
 
-  it('App component contains Login component', () => {
-    expect(wrapper.find("Login")).toHaveLength(1);
-  });
+  componentDidMount() {
+    window.addEventListener('keydown', this.handleKeyDown);
+  }
 
-  it('App component contains Footer component', () => {
-    expect(wrapper.find("Footer")).toHaveLength(1);
-  });
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleKeyDown);
+  }
 
-  it('test to check that CourseList is not displayed inside App', () => {
-    expect(wrapper.find("CourseList")).toHaveLength(0);
-  });
-});
+  render () {
+    return (
+      <React.Fragment>
+        <Notification listNotifications={this.listNotifications}/>
+        <div className="App">
+          <Header />
+          {this.props.isLoggedIn ? <CourseList listCourses={this.listCourses}/> : <Login />}
+          <Footer />
+        </div>
+      </React.Fragment>
+    );
+  }
+}
 
-describe("Testing <App isLoggedIn={true} />", () => {
-  let wrapper;
+App.defaultProps = {
+  isLoggedIn: false,
+  logOut: () => {}
+};
 
-  beforeEach(() => {
-    wrapper = shallow(<App isLoggedIn={true}/>);
-  });
+App.propTypes = {
+  isLoggedIn: PropTypes.bool,
+  logOut: PropTypes.func
+};
 
-  it("the Login component is not included", () => {
-    expect(wrapper.find('Login')).toHaveLength(0);
-  });
-
-  it(" the CourseList component is included", () => {
-    expect(wrapper.find('CourseList').exists());
-  });
-});
+export default App;
